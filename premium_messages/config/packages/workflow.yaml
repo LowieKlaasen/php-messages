@@ -1,0 +1,26 @@
+framework:
+    workflows:
+        message:
+            type: state_machine
+            audit_trail:
+                enabled: true
+            marking_store:
+                type: method
+                property: status
+            supports:
+                - App\Entity\Message
+            initial_marking: draft
+            places: 'App\Enum\MessageStatus::*'
+            transitions:
+                verify:
+                    from: draft
+                    to: verified
+                reject:
+                    from: draft
+                    to: rejected
+                revise:
+                    from: rejected
+                    to: draft
+                send:
+                    from: verified
+                    to: sent

@@ -1,12 +1,11 @@
-
 services:
-###> doctrine/doctrine-bundle ###
+  ###> doctrine/doctrine-bundle ###
   database:
     ports:
-      - "3306"
-###< doctrine/doctrine-bundle ###
+      - "3316:3306"
+  ###< doctrine/doctrine-bundle ###
 
-###> symfony/mailer ###
+  ###> symfony/mailer ###
   mailer:
     image: axllent/mailpit
     ports:
