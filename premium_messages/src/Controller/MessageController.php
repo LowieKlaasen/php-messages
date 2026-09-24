@@ -11,6 +11,7 @@ use App\Exception\MessageSendInProgressException;
 use App\Exception\MessageSendingFailedException;
 use App\Exception\UnchangedMessageException;
 use App\Service\MessageService;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,8 +23,13 @@ use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Workflow\Exception\NotEnabledTransitionException;
 
+// format: every route (and every error it throws) is JSON, whatever the client's Accept header says
+#[Route(format: 'json')]
 class MessageController extends AbstractController
 {
+    // replaces Symfony's default not-found message, which exposes internal class names
+    private const string NOT_FOUND = 'Message not found.';
+
     public function __construct(
         private readonly MessageService $messageService,
     ) {
@@ -37,7 +43,7 @@ class MessageController extends AbstractController
     }
 
     #[Route('/messages/{id}', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function show(Message $message): JsonResponse
+    public function show(#[MapEntity(message: self::NOT_FOUND)] Message $message): JsonResponse
     {
         return $this->json($message);
     }
@@ -51,7 +57,7 @@ class MessageController extends AbstractController
     }
 
     #[Route('/messages/{id}/status', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function updateStatus(Message $message, #[MapRequestPayload] UpdateMessageStatusRequest $request): JsonResponse
+    public function updateStatus(#[MapEntity(message: self::NOT_FOUND)] Message $message, #[MapRequestPayload] UpdateMessageStatusRequest $request): JsonResponse
     {
         try {
             $message = $this->messageService->changeStatus($message, $request->status);
@@ -63,7 +69,7 @@ class MessageController extends AbstractController
     }
 
     #[Route('/messages/{id}', requirements: ['id' => '\d+'], methods: ['PUT'])]
-    public function update(Message $message, #[MapRequestPayload] UpdateMessageRequest $request): JsonResponse
+    public function update(#[MapEntity(message: self::NOT_FOUND)] Message $message, #[MapRequestPayload] UpdateMessageRequest $request): JsonResponse
     {
         try {
             $message = $this->messageService->revise($message, $request);
@@ -77,7 +83,7 @@ class MessageController extends AbstractController
     }
 
     #[Route('/messages/{id}/send', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function send(Message $message): JsonResponse
+    public function send(#[MapEntity(message: self::NOT_FOUND)] Message $message): JsonResponse
     {
         try {
             $message = $this->messageService->send($message);
